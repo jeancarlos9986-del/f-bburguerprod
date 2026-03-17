@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>F&B Burguer | Cardápio Digital</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header class="main-header">
+        <div class="header-container">
+            <img src="./Logo F&B.jpeg" class="main-logo" alt="Logo F&B Burguer">
+            <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                <div id="openStatus" class="status-badge"></div>
+                <small id="proximaAbertura"
+                    style="display: none; color: #ffeb3b; font-weight: bold; margin-top: 4px;"></small>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero">
+        <div class="hero-content">
+            <p
+                style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); margin-bottom: 5px;">
+                Seja Bem-Vindo à
+            </p>
+            <h1>F&B Burguer</h1>
+            <p>Hambúrguer artesanal • Espetinhos • Jantas • Açaí</p>
+            <span class="hero-badge">🔥 Mais pedidos hoje</span>
+            <div class="preparo-badge">
+                <span class="icon">⏱️</span>
+                <span class="text">Preparo médio de hoje: <strong>25-45 min</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <input type="text" id="searchBar" placeholder="Pesquisar no cardápio..." onkeyup="window.buscarMenu(this.value)"
+            style="width: 100%; padding: 15px; background: #1f2833; border: 1px solid #45A29E; border-radius: 15px; color: white; margin-bottom: 20px;">
+
+        <div class="categories-nav" id="catNav">
+            <button class="cat-btn active" onclick="window.filterCat('Burguer', this)">Hambúrgueres</button>
+            <button class="cat-btn" onclick="window.filterCat('Espetinho', this)">Espetinhos</button>
+            <button class="cat-btn" onclick="window.filterCat('Açaí', this)">Açaí</button>
+            <button class="cat-btn" onclick="window.filterCat('Batata', this)">Batatas</button>
+            <button class="cat-btn" onclick="window.filterCat('Bebidas', this)">Bebidas</button>
+        </div>
+        <div class="disclaimer-bar">
+            <span>📸 Imagens meramente ilustrativas</span>
+
+        </div>
+        <br>
+        <div class="grid" id="menuGrid"></div>
+    </div>
+
+    <div class="cart-bar" id="cartBar" onclick="window.openCheckout()" style="display: none;">
+        <div style="display:flex; align-items:center; gap:12px">
+            <span id="cartQty"
+                style="background:#fff; color:#000; padding:3px 10px; border-radius:8px; font-weight:800;">0</span>
+            <div>
+                <strong>Ver Carrinho</strong>
+                <div style="font-size:.8rem; opacity:.8">Toque para finalizar</div>
+            </div>
+        </div>
+        <span id="cartTotal" style="font-weight: 800;">R$ 0,00</span>
+    </div>
+
+    <div class="modal" id="modalCheckout" style="display: none;">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2 style="font-weight: 800;">Finalizar Pedido</h2>
+                <i class="fa fa-times" onclick="window.closeModal()" style="cursor:pointer; font-size:1.5rem;"></i>
+            </div>
+
+            <div id="itemsReview"
+                style="max-height: 200px; overflow-y: auto; margin-bottom: 20px; border-bottom: 1px solid #45a29e; padding-bottom: 10px;">
+            </div>
+
+            <input type="text" id="cliNome" placeholder="Seu Nome (Obrigatório)">
+            <input type="tel" id="cliFone" placeholder="WhatsApp (DDD + Número)">
+
+            <select id="tipoEntrega" onchange="window.toggleEntrega(this.value)">
+                <option value="retirada">Vou Retirar (Balcão)</option>
+                <option value="entrega">Entrega (Delivery)</option>
+            </select>
+
+            <div id="campoEndereco" class="hidden">
+                <input type="text" id="cliEnd" placeholder="Rua, Número, Bairro">
+            </div>
+
+            <label>Forma de Pagamento:</label>
+            <select id="cliPag" onchange="window.togglePagamento(this.value)">
+                <option value="Pix">Pix</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Dinheiro">Dinheiro</option>
+            </select>
+
+            <div id="campoTroco" class="hidden">
+                <input type="number" id="valorTroco" placeholder="Troco para quanto?">
+            </div>
+
+            <div id="campoCartao" class="hidden">
+                <select id="cliTipoCartao">
+                    <option value="Débito">Débito</option>
+                    <option value="Crédito">Crédito</option>
+                </select>
+            </div>
+
+            <div
+                style="margin-top:20px; display:flex; justify-content:space-between; font-size:1.4rem; font-weight:800;">
+                <span>TOTAL</span> <span id="finalTotal" style="color:var(--accent)">R$ 0,00</span>
+            </div>
+
+            <button class="finish-btn" id="sendBtn" onclick="window.sendOrder()">🚀 CONFIRMAR PEDIDO</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modalPersonalizar" style="display: none;">
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <h2 id="itemPersonalizarNome" style="font-weight: 800; color: var(--accent);">Personalizar</h2>
+                <i class="fa fa-times" onclick="window.fecharPersonalizar()"
+                    style="cursor:pointer; font-size:1.5rem;"></i>
+            </div>
+            <div id="opcoesPersonalizar"
+                style="text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; color: white;">
+            </div>
+            <div id="listaExtras" style="margin-top: 10px; font-size: 0.9rem; color: #45A29E; font-weight: 600;"></div>
+            <div
+                style="margin-top:20px; display:flex; justify-content:space-between; font-size:1.2rem; font-weight:800;">
+                <span>Subtotal</span> <span id="itemPersonalizarPreco" style="color:var(--accent)">R$ 0,00</span>
+            </div>
+            <button class="finish-btn" onclick="window.confirmarPersonalizacao()" style="margin-top: 15px;">ADICIONAR AO
+                CARRINHO</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { FICHA_TECNICA } from './config.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIcG9NqxQ7PLUB9Qu45FUWwvD1K7of-2s",
+            authDomain: "fb-pedidos.firebaseapp.com",
+            projectId: "fb-pedidos",
+            storageBucket: "fb-pedidos.appspot.com",
+            messagingSenderId: "702648413709",
+            appId: "1:702648413709:web:80938a1f7375688684703a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const PRODUCTS = [
+            { cat: "Burguer", nome: "Tropical Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
+            { cat: "Burguer", nome: "Tropical Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
+            { cat: "Burguer", nome: "Cheesebacon Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
+            { cat: "Burguer", nome: "Cheesebacon Duplo", preco: 31.00, desc: "Pão brioche, 2 blends artesanais 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
+            { cat: "Burguer", nome: "Big F&B Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, cheddar, cebola caramelizada, picles, alface e molho da casa.", img: "./Big.png" },
+            { cat: "Burguer", nome: "Big F&B Duplo", preco: 31.00, desc: "Pão brioche, 2 blends artesanais 120g, cheddar, cebola caramelizada, picles, alface e molho da casa.", img: "./Big.png" },
+            { cat: "Burguer", nome: "F&B Banana Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, molho da casa, queijo mussarela, bacon, alface e banana grelhada.", img: "./Banana.png" },
+            { cat: "Burguer", nome: "F&B Banana Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, molho da casa, queijo mussarela, bacon, alface e banana grelhada.", img: "./Banana.png" },
+            { cat: "Burguer", nome: "F&B Toscana Simples", preco: 25.00, desc: "Pão brioche, blend de linguiça toscana 120g, queijo mussarela, tomate, molho da casa, alface, anel de cebola e molho agridoce.", img: "./F&B Toscana Simples.png" },
+            { cat: "Burguer", nome: "F&B Toscana Duplo", preco: 35.00, desc: "Pão brioche, 2 blends de linguiça toscana 120g, queijo mussarela, tomate, molho da casa, alface, anel de cebola e molho agridoce.", img: "./F&B Toscana Simples.png" },
+            { cat: "Burguer", nome: "Especial da Casa F&B Mania", preco: 45.00, desc: "Pão brioche, 3 blends artesanais 120g, triplo cheddar, triplo bacon, anéis de cebola, alface e molho da casa.", img: "./Mania.png" },
+            { cat: "Espetinho", nome: "Jantinha Completa", preco: 18.00, desc: "Arroz, feijão tropeiro, vinagrete e mandioca.", img: "./Jantinha.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Fraldinha", preco: 10.00, desc: "Espeto de fraldinha bovina.", img: "./fraldinha.png" },
+            { cat: "Espetinho", nome: "Espetinho de Almôndega com Bacon", preco: 10.00, desc: "Espeto de almôndega bovina com bacon.", img: "./Espetinho de Almôndega com Bacon.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Fran Bacon", preco: 10.00, desc: "Espeto de frango com bacon.", img: "./Espetinho de Franbacon.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Costela Bovina", preco: 10.00, desc: "Espeto de costela bovina suculenta.", img: "./Espetinho de Costela Bovina.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Linguiça Apimentada", preco: 10.00, desc: "Espeto de linguiça apimentada.", img: "./Espetinho de Linguiça Toscana Apimentada.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Kafta com Queijo", preco: 10.00, desc: "Espeto de kafta recheada com queijo.", img: "./Espetinho de Kafta com Queijo.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Linguiça Toscana", preco: 10.00, desc: "Espeto de linguiça toscana.", img: "./Espetinho de Linguiça Toscana.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Tulipa", preco: 10.00, desc: "Espeto de tulipa de frango.", img: "./Espetinho de Tulipa.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Cupim Laranja", preco: 12.00, desc: "Espeto de cupim com toque cítrico de laranja.", img: "./Espetinho de Cupim da Laranja.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Costela Suína", preco: 10.00, desc: "Espeto de costela suína.", img: "./Espetinho de Costela Suína.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Filé Mignon", preco: 16.00, desc: "Espeto de filé mignon macio.", img: "./Espetinho de Filé Mignon.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Pão de Alho", preco: 10.00, desc: "Pão de alho assado no espeto.", img: "./Espetinho de Pão de Alho.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Coraçãozinho", preco: 10.00, desc: "Espeto de coração de frango.", img: "./Espetinho de Coraçãozinho.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Medalhão", preco: 10.00, desc: "Espeto de medalhão de frango com bacon.", img: "./Espetinho de Medalhão Bovino.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Choripan", preco: 10.00, desc: "Espeto de linguiça estilo choripan.", img: "./Espetinho de Choripan.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Picanha", preco: 18.00, desc: "Espeto de picanha premium.", img: "./Espetinho de Picanha.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Tilápia", preco: 12.00, desc: "Espeto de tilápia grelhada.", img: "./Espetinho de Tilápia.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Pintado", preco: 12.00, desc: "Espeto de peixe pintado.", img: "./Espetinho de Pintado.jpg" },
+            { cat: "Batata", nome: "Porção Batata Especial", preco: 45.00, desc: "Cheddar, bacon e 6 anéis de cebola.", img: "./.png" },
+            { cat: "Batata", nome: "Batata Tam M", preco: 8.00, desc: "140gr de batata frita.", },
+            { cat: "Batata", nome: "Batata Tam P", preco: 5.00, desc: "90gr de batata frita.", img: "./.png" },
+
+
+            { cat: "Bebidas", nome: "Coca Cola 2L", preco: 12.00, desc: "Refrigerante 2 Litros", img: "./Coca 2L.jpg" },
+            { cat: "Bebidas", nome: "Coca Cola Zero 2L", preco: 12.00, desc: "Refrigerante Zero 2 Litros", img: "./Coca Cola Zero 2L.jpg" },
+            { cat: "Bebidas", nome: "Fanta Laranja 2L", preco: 12.00, desc: "Refrigerante 2 Litros", img: "./Fanta Laranja 2L.jpg" },
+            { cat: "Bebidas", nome: "Kuat 2L", preco: 10.00, desc: "Refrigerante 2 Litros", img: "./Kuat 2L.jpg" },
+            { cat: "Bebidas", nome: "Mineiro 1.5L", preco: 7.50, desc: "Refrigerante 1.5 Litros", img: "./Mineiro 1.5L.jpg" },
+            { cat: "Bebidas", nome: "Coca Cola 1L", preco: 8.50, desc: "Refrigerante 1 Litro", img: "./Coca Cola 1L.jpg" },
+            { cat: "Bebidas", nome: "Coca Cola Zero 1L", preco: 8.50, desc: "Refrigerante Zero 1 Litro", img: "./Coca Cola Zero 1L.jpg" },
+            { cat: "Bebidas", nome: "Mineiro Lata", preco: 5.00, desc: "Refrigerante Lata", img: "./Mineiro Lata.jpg" },
+            { cat: "Bebidas", nome: "Fanta Laranja Lata", preco: 5.00, desc: "Refrigerante Lata", img: "./Fanta Laranja Lata.jpg" },
+            { cat: "Bebidas", nome: "Fanta Uva Lata", preco: 5.00, desc: "Refrigerante Lata", img: "./Fanta Uva Lata.jpg" },
+            { cat: "Bebidas", nome: "Coca Cola Lata", preco: 5.00, desc: "Refrigerante Lata", img: "./Coca Cola Lata.jpg" },
+            { cat: "Bebidas", nome: "Coca Cola Zero Lata", preco: 5.00, desc: "Refrigerante Lata", img: "./Coca Cola Zero Lata.jpg" },
+            { cat: "Bebidas", nome: "Dell Vale Lata", preco: 5.00, desc: "Suco Lata", img: "./Dell Vale Lata.jpg" },
+            { cat: "Bebidas", nome: "Agua Mineral", preco: 4.00, desc: "Água sem gás", img: "./Agua Mineral.jpg" },
+            { cat: "Bebidas", nome: "Agua C/Gas", preco: 4.00, desc: "Água com gás", img: "./Agua C/Gas.jpg" },
+            { cat: "Bebidas", nome: "Dell Vale Pessego", preco: 10.00, desc: "Suco Del Valle", img: "./Dell Vale Pessego.jpg" },
+            { cat: "Bebidas", nome: "Dell Vale Manga", preco: 10.00, desc: "Suco Del Valle", img: "./Dell Vale Manga.jpg" },
+            { cat: "Bebidas", nome: "Dell Vale Abacaxi", preco: 10.00, desc: "Suco Del Valle", img: "./Dell Vale Abacaxi.jpg" },
+            { cat: "Bebidas", nome: "Dell Vale Laranja", preco: 10.00, desc: "Suco Del Valle", img: "./Dell Vale Laranja.jpg" },
+            { cat: "Bebidas", nome: "Amstel", preco: 6.00, desc: "Cerveja Lata", img: "./Amstel.jpg" },
+            { cat: "Bebidas", nome: "Skol", preco: 5.00, desc: "Cerveja Lata", img: "./Skol.jpg" },
+            { cat: "Bebidas", nome: "Brahma", preco: 5.00, desc: "Cerveja Lata", img: "./Brahma.jpg" },
+            { cat: "Bebidas", nome: "Heineken", preco: 9.00, desc: "Cerveja Long Neck", img: "./Heineken.jpg" },
+            { cat: "Bebidas", nome: "Monster Energy", preco: 13.00, desc: "Energético Lata", img: "./Monster Energy.jpg" }
+        ];
+        const ADICIONAIS = [
+            { nome: "Molho Verde", preco: 3.00 },
+            { nome: "Molho da Casa", preco: 3.00 },
+            { nome: "Molho de alho", preco: 3.00 },
+            { nome: "Mussarela", preco: 3.00 },
+            { nome: "Cheddar", preco: 3.00 },
+            { nome: "Bacon", preco: 4.00 },
+            { nome: "Abacaxi", preco: 2.00 },
+            { nome: "Ovo", preco: 3.00 },
+            { nome: "Banana", preco: 2.00 },
+            { nome: "Alface", preco: 1.00 },
+            { nome: "Cebola Caramelizada", preco: 2.00 },
+            { nome: "Picles", preco: 3.00 },
+            { nome: "Anel de Cebola", preco: 4.00 }
+        ];
+
+        let cart = [];
+        let dadosCliente = {};
+        let currentCat = "Burguer";
+        let itemSendoPersonalizado = null;
+        let extrasAtivos = [];
+
+        // --- INTERFACE ---
+        window.filterCat = (cat, btn) => {
+            currentCat = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            window.renderMenu();
+        };
+
+        window.renderMenu = (filter = "") => {
+            const searchTerm = (typeof filter === 'string' ? filter : "").toLowerCase();
+            const grid = document.getElementById('menuGrid');
+            const filtered = PRODUCTS.filter(p => {
+                const matchesCat = (currentCat === 'all' || p.cat === currentCat);
+                return matchesCat && p.nome.toLowerCase().includes(searchTerm);
+            });
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="item ${p.preco >= 35 ? 'item-destaque' : ''}">
+                    <div class="product-image-container">
+                        <img src="${p.img || './img/placeholder.png'}" class="product-image">
+                    </div>
+                    <div class="item-info">
+                        <h3>${p.nome}</h3>
+                        <p>${p.desc}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                            <span class="price">R$ ${p.preco.toFixed(2)}</span>
+                            <button onclick="window.addToCart('${p.nome}', ${p.preco}, '${p.cat}')" class="add-btn-style">
+                                <i class="fa fa-plus"></i> ADICIONAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        window.addToCart = (nome, preco, cat) => {
+            const produto = PRODUCTS.find(p => p.nome === nome);
+            if (cat !== 'Burguer') {
+                cart.push({ nome, preco, cat, obs: "" });
+                window.atualizarInterfaceCarrinho();
+                return;
+            }
+            itemSendoPersonalizado = { nome, preco, cat };
+            extrasAtivos = [];
+            document.getElementById('itemPersonalizarNome').innerText = nome;
+            document.getElementById('itemPersonalizarPreco').innerText = `R$ ${preco.toFixed(2)}`;
+
+
+            // Lógica simples de ingredientes para retirar
+            const ingredientes = produto.desc.split(',').map(i => i.trim());
+            let html = `<p style="margin-bottom:10px; color:var(--accent)">Retirar?</p>`;
+            ingredientes.forEach(ing => {
+                html += `<label style="display:block; margin-bottom:8px;">
+                    <input type="checkbox" class="obs-check" value="Sem ${ing}"> Sem ${ing}
+                </label>`;
+            });
+
+            html += `
+<hr class="divider">
+<p class="titulo-adicionais">Adicionais</p>
+`;
+
+            ADICIONAIS.forEach(ex => {
+                html += `
+    <button onclick="window.addExtra('${ex.nome}', ${ex.preco})" class="extra-btn-clean">
+        <span class="extra-left">+ ${ex.nome}</span>
+        <span class="extra-price">R$ ${ex.preco.toFixed(2)}</span>
+    </button>
+    `;
+            });
+
+            document.getElementById('opcoesPersonalizar').innerHTML = html;
+            document.getElementById('modalPersonalizar').style.display = 'flex';
+        };
+
+        window.addExtra = (nome, preco) => {
+            extrasAtivos.push({ nome, preco });
+            const total = itemSendoPersonalizado.preco + extrasAtivos.reduce((a, b) => a + b.preco, 0);
+            document.getElementById('itemPersonalizarPreco').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('listaExtras').innerText = "Extras: " + extrasAtivos.map(e => e.nome).join(', ');
+        };
+
+        window.confirmarPersonalizacao = () => {
+            const obsRetirar = Array.from(document.querySelectorAll('.obs-check:checked')).map(c => c.value);
+            const totalExtras = extrasAtivos.reduce((a, b) => a + b.preco, 0);
+            cart.push({
+                nome: itemSendoPersonalizado.nome,
+                preco: itemSendoPersonalizado.preco + totalExtras,
+                cat: itemSendoPersonalizado.cat,
+                obs: obsRetirar.concat(extrasAtivos.map(e => "Extra " + e.nome)).join(', ')
+            });
+            window.atualizarInterfaceCarrinho();
+            window.fecharPersonalizar();
+            setTimeout(() => {
+                sugerirUpsellInteligente();
+            }, 500);
+        };
+
+        window.atualizarInterfaceCarrinho = () => {
+            const total = cart.reduce((a, b) => a + b.preco, 0);
+            document.getElementById('cartQty').innerText = cart.length;
+            document.getElementById('cartTotal').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('cartBar').style.display = 'flex';
+            confetti({ particleCount: 30, spread: 50, origin: { y: 0.9 } });
+        };
+
+        // --- LÓGICA DE PAGAMENTO PIX ---
+        const pagarPix = async (valorTotal) => {
+            const btn = document.getElementById('sendBtn');
+            try {
+                btn.innerText = "GERANDO PIX...";
+                btn.disabled = true;
+
+                const response = await fetch('https://f-burguer.onrender.com/pix', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ valor: valorTotal, descricao: `F&B Burguer - ${document.getElementById('cliNome').value}` })
+                });
+
+                const data = await response.json();
+                if (data.erro) throw new Error(data.detalhe);
+
+                const modalBody = document.querySelector('#modalCheckout .modal-body');
+                modalBody.innerHTML = `
+                    <div style="text-align:center; padding: 20px; color:white;">
+                        <h2 style="color:var(--accent); margin-bottom:15px;">Pague via PIX</h2>
+                        <div style="background:white; padding:10px; border-radius:10px; display:inline-block; margin-bottom:15px;">
+                            <img src="data:image/png;base64,${data.qr_base64}" style="width:200px; display:block;">
+                        </div>
+                        <button class="finish-btn" onclick="navigator.clipboard.writeText('${data.qr_code}').then(() => alert('Copiado!'))" style="margin-bottom: 20px;">
+                            COPIAR CÓDIGO PIX
+                        </button>
+                        <div id="statusPagamento"><i class="fa fa-spinner fa-spin"></i> Aguardando confirmação...</div>
+                    </div>`;
+
+                const checkStatus = setInterval(async () => {
+                    try {
+                        const res = await fetch(`https://f-burguer.onrender.com/pix/${data.pagamento_id}`);
+                        const sData = await res.json();
+                        if (sData.status === 'approved' || sData.status === 'accredited') {
+
+                            clearInterval(checkStatus);
+
+                            document.getElementById('statusPagamento').innerHTML = "✅ PAGAMENTO CONFIRMADO";
+
+                            setTimeout(() => {
+                                window.concluirPedidoFinal();
+                            }, 1500);
+
+                        }
+                    } catch (e) { console.error("Erro status", e); }
+                }, 5000);
+
+            } catch (e) {
+                alert("Erro PIX: " + e.message);
+                btn.innerText = "🚀 CONFIRMAR PEDIDO";
+                btn.disabled = false;
+            }
+        };
+
+        // --- FINALIZAÇÃO ---
+        window.concluirPedidoFinal = async () => {
+            try {
+                const total = cart.reduce((a, b) => a + b.preco, 0);
+
+                const lanches = {};
+                const espetos = {};
+                const refrigerantes = {};
+                const acai = {};
+
+                cart.forEach(item => {
+                    if (item.cat === "Burguer") {
+                        lanches[item.nome] = (lanches[item.nome] || 0) + 1;
+                    } else if (item.cat === "Espetinho") {
+                        espetos[item.nome] = (espetos[item.nome] || 0) + 1;
+                    } else if (item.cat === "Bebidas") {
+                        refrigerantes[item.nome] = (refrigerantes[item.nome] || 0) + 1;
+                    }
+                });
+
+                let observacaoFinal = "";
+                cart.forEach(item => {
+                    if (item.obs) {
+                        observacaoFinal += `${item.nome}: ${item.obs}\n`;
+                    }
+                });
+
+                // PROTEÇÃO: Só tenta ler os campos se eles existirem na tela
+                let enderecoString = "Retirada no Balcão";
+
+                if (dadosCliente.tipoEntrega === "entrega") {
+                    // Pegamos o valor do seu campo único cliEnd
+                    const campoUnico = document.getElementById('cliEnd');
+
+                    if (campoUnico && campoUnico.value.trim() !== "") {
+                        enderecoString = campoUnico.value.trim();
+                    } else {
+                        enderecoString = "Endereço não informado";
+                    }
+                }
+
+                // PROTEÇÃO: Troco
+                const campoTroco = document.getElementById('troco');
+                const valorTroco = campoTroco ? (parseFloat(campoTroco.value) || 0) : 0;
+
+                const dados = {
+                    cliente_nome: dadosCliente.nome,
+                    cliente_fone: dadosCliente.fone,
+                    lanches: lanches,
+                    espetos: espetos,
+                    refrigerantes: refrigerantes,
+                    acai: acai,
+                    total: total,
+                    observacao: observacaoFinal.trim(),
+                    endereco_entrega: enderecoString,
+                    tipo_local: dadosCliente.tipoEntrega || 'balcao',
+                    pagamento: {
+                        metodo: dadosCliente.pag,
+                        status_pagamento: (dadosCliente.pag === "Pix" ? "Pago" : "Pendente"),
+                        troco: valorTroco
+                    },
+                    status: "Pendente",
+                    timestamp: Date.now()
+                };
+
+                // Salvar no Firebase
+                const docRef = await addDoc(collection(db, "pedidos"), dados);
+
+                // Feedback e Redirecionamento
+                console.log("Pedido enviado com sucesso:", docRef.id);
+
+                // WhatsApp (opcional, mas recomendado)
+                const msgWhats = encodeURIComponent(
+                    `*🍔 PEDIDO REGISTRADO - F&B BURGUER*
+---------------------------------------
+👤 *CLIENTE:* ${dados.cliente_nome}
+---------------------------------------
+
+💰 *RESUMO DO PEDIDO:*
+*Total: R$ ${total.toFixed(2)}*
+💳 *PAGAMENTO:* ${dados.forma_pagamento || 'A definir'}
+
+---------------------------------------
+_🤖 Este é um comprovante automático._
+_O preparo é iniciado imediatamente após o envio desta mensagem._`
+                );
+
+                // Abre o WhatsApp já no seu número de Uberlândia
+                window.open(`https://wa.me/5534997990974?text=${msgWhats}`, '_blank');
+                window.location.href = `status.html?id=${docRef.id}`;
+
+            } catch (error) {
+                console.error("Erro detalhado ao finalizar pedido:", error);
+                alert("Erro ao enviar pedido. Verifique se todos os campos estão preenchidos.");
+            }
+        };
+        window.sendOrder = async () => {
+
+            const nome = document.getElementById('cliNome').value;
+            const fone = document.getElementById('cliFone').value;
+            const pag = document.getElementById('cliPag').value;
+            const tipoEntrega = document.getElementById('tipoEntrega').value;
+            const endereco = document.getElementById('cliEnd')?.value || "";
+
+            if (!nome) {
+                alert("Nome obrigatório");
+                return;
+            }
+
+            dadosCliente = {
+                nome,
+                fone,
+                pag,
+                tipoEntrega,
+                endereco
+            };
+
+            const total = cart.reduce((a, b) => a + b.preco, 0);
+
+            if (pag === "Pix") {
+                await pagarPix(total);
+            } else {
+                await window.concluirPedidoFinal();
+            }
+        };
+        window.openCheckout = () => {
+            const review = document.getElementById('itemsReview');
+            review.innerHTML = cart.map((i, index) => `
+        <div style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border-left: 4px solid var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items: center;">
+                <strong style="font-size: 1.1rem;">${i.nome}</strong>
+                <i class="fa fa-trash" onclick="window.removeItem(${index})" style="color: #ff4d4d; cursor: pointer; padding: 5px;"></i>
+            </div>
+            <div style="font-size:0.85rem; color:#45A29E; margin-top:5px; font-style: italic;">
+                ${i.obs ? i.obs : '<span style="color:#777">Item Completo</span>'}
+            </div>
+            <div style="text-align:right; margin-top:5px; font-weight:800;">
+                R$ ${i.preco.toFixed(2)}
+            </div>
+        </div>`).join('');
+
+            document.getElementById('finalTotal').innerText = `R$ ${cart.reduce((a, b) => a + b.preco, 0).toFixed(2)}`;
+            document.getElementById('modalCheckout').style.display = 'flex';
+        };
+        window.removeItem = (index) => {
+            cart.splice(index, 1);
+            if (cart.length === 0) document.getElementById('cartBar').style.display = 'none';
+            window.openCheckout();
+            window.atualizarInterfaceCarrinho();
+        };
+
+        window.closeModal = () => document.getElementById('modalCheckout').style.display = 'none';
+        window.fecharPersonalizar = () => document.getElementById('modalPersonalizar').style.display = 'none';
+        window.toggleEntrega = (v) => document.getElementById('campoEndereco').classList.toggle('hidden', v !== 'entrega');
+        window.togglePagamento = (v) => {
+            document.getElementById('campoTroco').classList.toggle('hidden', v !== 'Dinheiro');
+            document.getElementById('campoCartao').classList.toggle('hidden', v !== 'Cartão');
+        };
+
+        window.buscarMenu = (v) => {
+            clearTimeout(window.t);
+            window.t = setTimeout(() => window.renderMenu(v), 300);
+        };
+
+        window.addEventListener("load", () => {
+            window.renderMenu();
+            atualizarStatusUI();
+            setInterval(atualizarStatusUI, 60000); // atualiza a cada 1 min
+        });
+        const HORARIO_FUNCIONAMENTO = {
+            abre: "19:00",
+            fecha: "23:30"
+        };
+
+        const verificarStatusLoja = () => {
+            const agora = new Date();
+
+            const [abreH, abreM] = HORARIO_FUNCIONAMENTO.abre.split(":").map(Number);
+            const [fechaH, fechaM] = HORARIO_FUNCIONAMENTO.fecha.split(":").map(Number);
+
+            const abre = new Date();
+            abre.setHours(abreH, abreM, 0);
+
+            const fecha = new Date();
+            fecha.setHours(fechaH, fechaM, 0);
+
+            return agora >= abre && agora <= fecha;
+        };
+
+        const atualizarStatusUI = () => {
+            const status = document.getElementById("openStatus");
+            const infoAbertura = document.getElementById("proximaAbertura"); // Pega o elemento da mensagem
+            const aberto = verificarStatusLoja();
+
+            if (aberto) {
+                status.innerText = "ABERTO";
+                status.classList.add("aberto");
+                status.classList.remove("fechado");
+
+                // Esconde a mensagem de horário se já estiver aberto
+                if (infoAbertura) {
+                    infoAbertura.style.display = "none";
+                }
+            } else {
+                status.innerText = "FECHADO";
+                status.classList.add("fechado");
+                status.classList.remove("aberto");
+
+                // Mostra a mensagem com o horário de abertura definido na sua const
+                if (infoAbertura) {
+                    infoAbertura.innerText = `Abriremos às ${HORARIO_FUNCIONAMENTO.abre}`;
+                    infoAbertura.style.display = "block";
+                }
+            }
+        };
+
+        // Não esqueça de chamar a função para ela rodar assim que a página carregar
+        atualizarStatusUI();
+        const sugerirUpsell = (categoria) => {
+
+            // só sugere se for hambúrguer
+            if (categoria !== "Burguer") return;
+
+            const sugestoes = PRODUCTS.filter(p =>
+                p.cat === "Batata" || p.cat === "Bebidas"
+            ).slice(0, 2); // pega 2 sugestões
+
+            const modal = document.createElement("div");
+            modal.className = "modal";
+            modal.innerHTML = `
+        <div class="modal-body" style="text-align:center;">
+            <h2 style="margin-bottom:10px;">🔥 Combina com seu pedido</h2>
+            <p style="font-size:0.9rem; color:#aaa; margin-bottom:15px;">
+                Adicione um extra ao seu pedido
+            </p>
+
+            ${sugestoes.map(p => `
+                <div class="upsell-item">
+                    <span>${p.nome}</span>
+                    <strong>R$ ${p.preco.toFixed(2)}</strong>
+                    <button onclick="window.addToCart('${p.nome}', ${p.preco}, '${p.cat}'); document.body.removeChild(this.closest('.modal'))">
+                        + Adicionar
+                    </button>
+                </div>
+            `).join("")}
+
+            <button onclick="document.body.removeChild(this.closest('.modal'))"
+                style="margin-top:15px; opacity:.7;">
+                Continuar sem adicionar
+            </button>
+        </div>
+    `;
+
+            document.body.appendChild(modal);
+        };
+        const sugerirUpsellInteligente = () => {
+
+            // pega itens do carrinho
+            const carrinho = window.cart || [];
+
+            const temLanche = carrinho.some(i => i.cat === "Burguer");
+            const temBebida = carrinho.some(i => i.cat === "Bebidas");
+            const temBatata = carrinho.some(i => i.cat === "Batata");
+
+            // só ativa se tiver apenas 1 lanche
+            if (carrinho.length !== 1 || !temLanche) return;
+
+            // se já tem bebida ou batata, não sugere
+            if (temBebida || temBatata) return;
+
+            // encontra sugestões ideais
+            const batata = PRODUCTS.find(p =>
+                p.cat === "Batata" && p.nome.toLowerCase().includes("p")
+            );
+
+            const bebida = PRODUCTS.find(p =>
+                p.cat === "Bebidas" && p.nome.toLowerCase().includes("lata")
+            );
+
+            if (!batata && !bebida) return;
+
+            const modal = document.createElement("div");
+            modal.className = "modal";
+
+            modal.innerHTML = `
+        <div class="modal-body" style="text-align:center;">
+            <h2>🔥 Complete seu pedido</h2>
+            <p style="font-size:0.9rem; color:#aaa;">
+                Que tal adicionar?
+            </p>
+
+            ${batata ? `
+            <div class="upsell-item">
+                <span>${batata.nome}</span>
+                <strong>R$ ${batata.preco.toFixed(2)}</strong>
+                <button onclick="window.addToCart('${batata.nome}', ${batata.preco}, '${batata.cat}'); fecharUpsell(this)">
+                    + Batata
+                </button>
+            </div>` : ""}
+
+            ${bebida ? `
+            <div class="upsell-item">
+                <span>${bebida.nome}</span>
+                <strong>R$ ${bebida.preco.toFixed(2)}</strong>
+                <button onclick="window.addToCart('${bebida.nome}', ${bebida.preco}, '${bebida.cat}'); fecharUpsell(this)">
+                    + Bebida
+                </button>
+            </div>` : ""}
+
+            <button onclick="fecharUpsell(this)" style="margin-top:10px; opacity:.6;">
+                Agora não
+            </button>
+        </div>
+    `;
+
+            document.body.appendChild(modal);
+        };
+
+        const fecharUpsell = (el) => {
+            document.body.removeChild(el.closest('.modal'));
+        };
+    </script>
+</body>
+<footer style="text-align: center; padding: 20px; opacity: 0.6;">
+    <p style="font-size: 0.9rem;">
+        F&B Burguer <br>
+        *Os produtos e acompanhamentos podem variar. Imagens meramente ilustrativas.
+    </p>
+</footer>
+
+</html>
