@@ -161,8 +161,8 @@
         const db = getFirestore(app);
 
         const PRODUCTS = [
-            { cat: "Burguer", nome: "Tropical Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./Tropical.png" },
-            { cat: "Burguer", nome: "Tropical Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./Tropical.png" },
+            { cat: "Burguer", nome: "Tropical Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
+            { cat: "Burguer", nome: "Tropical Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
             { cat: "Burguer", nome: "Cheesebacon Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
             { cat: "Burguer", nome: "Cheesebacon Duplo", preco: 31.00, desc: "Pão brioche, 2 blends artesanais 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
             { cat: "Burguer", nome: "Big F&B Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, cheddar, cebola caramelizada, picles, alface e molho da casa.", img: "./Big.png" },
@@ -186,7 +186,7 @@
             { cat: "Espetinho", nome: "Espetinho de Filé Mignon", preco: 16.00, desc: "Espeto de filé mignon macio.", img: "./Espetinho de Filé Mignon.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Pão de Alho", preco: 10.00, desc: "Pão de alho assado no espeto.", img: "./Espetinho de Pão de Alho.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Coraçãozinho", preco: 10.00, desc: "Espeto de coração de frango.", img: "./Espetinho de Coraçãozinho.jpg" },
-            { cat: "Espetinho", nome: "Espetinho de Medalhão", preco: 10.00, desc: "Espeto de medalhão bovino com bacon.", img: "./Espetinho de Medalhão Bovino.jpg" },
+            { cat: "Espetinho", nome: "Espetinho de Medalhão", preco: 10.00, desc: "Espeto de medalhão de frango com bacon.", img: "./Espetinho de Medalhão Bovino.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Choripan", preco: 10.00, desc: "Espeto de linguiça estilo choripan.", img: "./Espetinho de Choripan.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Picanha", preco: 18.00, desc: "Espeto de picanha premium.", img: "./Espetinho de Picanha.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Tilápia", preco: 12.00, desc: "Espeto de tilápia grelhada.", img: "./Espetinho de Tilápia.jpg" },
@@ -350,7 +350,7 @@
         };
 
         // --- LÓGICA DE PAGAMENTO PIX ---
-        const pagarPix = async (valorTotal) => {
+        const pagarPix = async (valorTotal, pedidoId) => {
             const btn = document.getElementById('sendBtn');
             try {
                 btn.innerText = "GERANDO PIX...";
@@ -359,7 +359,11 @@
                 const response = await fetch('https://f-burguer.onrender.com/pix', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ valor: valorTotal, descricao: `F&B Burguer - ${document.getElementById('cliNome').value}` })
+                    body: JSON.stringify({
+                        valor: valorTotal,
+                        descricao: `F&B Burguer - ${document.getElementById('cliNome').value}`,
+                        pedidoId: pedidoId // 🔥 ESSENCIAL
+                    })
                 });
 
                 const data = await response.json();
@@ -380,7 +384,7 @@
 
                 const checkStatus = setInterval(async () => {
                     try {
-                        const res = await fetch(`https://f-burguer.onrender.com/pix/${data.pagamento_id}`);
+                        const res = await fetch(`https://f-burguer.onrender.com/status/${data.pagamento_id}`);
                         const sData = await res.json();
                         if (sData.status === 'approved' || sData.status === 'accredited') {
 
@@ -484,7 +488,6 @@
 💰 *RESUMO DO PEDIDO:*
 *Total: R$ ${total.toFixed(2)}*
 💳 *PAGAMENTO:* ${dados.forma_pagamento || 'A definir'}
-
 ---------------------------------------
 _🤖 Este é um comprovante automático._
 _O preparo é iniciado imediatamente após o envio desta mensagem._`
@@ -523,7 +526,22 @@ _O preparo é iniciado imediatamente após o envio desta mensagem._`
             const total = cart.reduce((a, b) => a + b.preco, 0);
 
             if (pag === "Pix") {
-                await pagarPix(total);
+
+                // 🔥 CRIA PEDIDO ANTES
+                const docRef = await addDoc(collection(db, "pedidos"), {
+                    status: "Aguardando pagamento",
+                    pago: false,
+                    timestamp: Date.now(),
+                    cliente_nome: nome,
+                    cliente_fone: fone,
+                    itens: cart
+                });
+
+                const pedidoId = docRef.id;
+
+                // 🔥 CHAMA PIX COM ID
+                await pagarPix(total, pedidoId);
+
             } else {
                 await window.concluirPedidoFinal();
             }
@@ -725,6 +743,12 @@ _O preparo é iniciado imediatamente após o envio desta mensagem._`
             document.body.removeChild(el.closest('.modal'));
         };
     </script>
+    <div id="welcome-toast"
+        style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #ffeb3b; color: #000; padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;">
+        <span>🚀 Você está testando nosso novo sistema!</span>
+        <button onclick="this.parentElement.style.display='none'"
+            style="border: none; background: transparent; font-weight: bold; cursor: pointer;">X</button>
+    </div>
 </body>
 <footer style="text-align: center; padding: 20px; opacity: 0.6;">
     <p style="font-size: 0.9rem;">
