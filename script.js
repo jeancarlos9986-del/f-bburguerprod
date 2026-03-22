@@ -56,6 +56,7 @@ const PRECOS = {
         "Medalhão": 10.00, "Choripan": 10.00, "Picanha": 18.00, "Tilapia": 12.00, "Pintado": 12.00, "Miolo de acem": 15.00, "Especial de batata": 45.00, "Batata Frita M": 8.00, "Batata Frita P": 5.00
     },
     lanches: {
+        "X-Bagunça": 38.00, "X-Tudo": 34.00,
         "Cheesebacon Simples": 21.00, "Cheesebacon Duplo": 31.00,
         "Tropical Simples": 22.00, "Tropical Duplo": 32.00,
         "BIG F&B Simples": 21.00, "BIG F&B Duplo": 31.00,
