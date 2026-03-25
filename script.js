@@ -3024,7 +3024,7 @@ ${itensLista}${textoObs}
 *Total: R$ ${pedido.total.toFixed(2)}*
 ${infoPagamento}
 
-*Você aceita barbecure, molho de alho, molho verde e mostarda para acompanhar seu lanche?*
+*Você aceita barbecure, molho de alho e mostarda para acompanhar seu lanche?*
 *Previsão:* 20 a 40 min.
 *Agradecemos a preferência! 🍟*
 ---------------------------------------`.trim();
