@@ -98,9 +98,10 @@
 
             <label>Forma de Pagamento:</label>
             <select id="cliPag" onchange="window.togglePagamento(this.value)">
-                <option value="Pix">Pix</option>
                 <option value="Cartão">Cartão</option>
                 <option value="Dinheiro">Dinheiro</option>
+                <option value="Pix">Pix</option>
+
             </select>
 
             <div id="campoTroco" class="hidden">
@@ -148,6 +149,7 @@
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { FICHA_TECNICA } from './config.js';
 
+        // CONFIGURAÇÃO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDIcG9NqxQ7PLUB9Qu45FUWwvD1K7of-2s",
             authDomain: "fb-pedidos.firebaseapp.com",
@@ -160,9 +162,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // DADOS DO CARDÁPIO
         const PRODUCTS = [
-            { cat: "Burguer", nome: "Tropical Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./Tropical.png" },
-            { cat: "Burguer", nome: "Tropical Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./Tropical.png" },
+            { cat: "Burguer", nome: "Tropical Simples", preco: 22.00, desc: "Pão brioche, blend artesanal 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
+            { cat: "Burguer", nome: "Tropical Duplo", preco: 32.00, desc: "Pão brioche, 2 blends artesanais 120g, queijo mussarela, cebola caramelizada, bacon, abacaxi grelhado e alface.", img: "./tropical.png" },
             { cat: "Burguer", nome: "Cheesebacon Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
             { cat: "Burguer", nome: "Cheesebacon Duplo", preco: 31.00, desc: "Pão brioche, 2 blends artesanais 120g, bacon, cheddar, molho da casa e cebola caramelizada.", img: "./CheeseBacon.png" },
             { cat: "Burguer", nome: "Big F&B Simples", preco: 21.00, desc: "Pão brioche, blend artesanal 120g, cheddar, cebola caramelizada, picles, alface e molho da casa.", img: "./Big.png" },
@@ -191,11 +194,9 @@
             { cat: "Espetinho", nome: "Espetinho de Picanha", preco: 18.00, desc: "Espeto de picanha premium.", img: "./Espetinho de Picanha.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Tilápia", preco: 12.00, desc: "Espeto de tilápia grelhada.", img: "./Espetinho de Tilápia.jpg" },
             { cat: "Espetinho", nome: "Espetinho de Pintado", preco: 12.00, desc: "Espeto de peixe pintado.", img: "./Espetinho de Pintado.jpg" },
-            { cat: "Batata", nome: "Porção Batata Especial", preco: 45.00, desc: "Cheddar, bacon e 6 anéis de cebola.", img: "./.png" },
-            { cat: "Batata", nome: "Batata Tam M", preco: 8.00, desc: "140gr de batata frita.", },
-            { cat: "Batata", nome: "Batata Tam P", preco: 5.00, desc: "90gr de batata frita.", img: "./.png" },
-
-
+            { cat: "Batata", nome: "Porção Batata Especial", preco: 45.00, desc: "Cheddar, bacon e 6 anéis de cebola.", img: "./batata_especial.png" },
+            { cat: "Batata", nome: "Batata Tam M", preco: 8.00, desc: "140gr de batata frita.", img: "./batata_m.png" },
+            { cat: "Batata", nome: "Batata Tam P", preco: 5.00, desc: "90gr de batata frita.", img: "./batata_p.png" },
             { cat: "Bebidas", nome: "Coca Cola 2L", preco: 12.00, desc: "Refrigerante 2 Litros", img: "./Coca 2L.jpg" },
             { cat: "Bebidas", nome: "Coca Cola Zero 2L", preco: 12.00, desc: "Refrigerante Zero 2 Litros", img: "./Coca Cola Zero 2L.jpg" },
             { cat: "Bebidas", nome: "Fanta Laranja 2L", preco: 12.00, desc: "Refrigerante 2 Litros", img: "./Fanta Laranja 2L.jpg" },
@@ -221,6 +222,7 @@
             { cat: "Bebidas", nome: "Heineken", preco: 9.00, desc: "Cerveja Long Neck", img: "./Heineken.jpg" },
             { cat: "Bebidas", nome: "Monster Energy", preco: 13.00, desc: "Energético Lata", img: "./Monster Energy.jpg" }
         ];
+
         const ADICIONAIS = [
             { nome: "Molho Verde", preco: 3.00 },
             { nome: "Molho da Casa", preco: 3.00 },
@@ -237,13 +239,16 @@
             { nome: "Anel de Cebola", preco: 4.00 }
         ];
 
-        let cart = [];
+        // ESTADO DA APLICAÇÃO
+        window.ultimoPagamentoId = null;
+        window.pedidoAtualId = null;
+        window.cart = [];
         let dadosCliente = {};
         let currentCat = "Burguer";
         let itemSendoPersonalizado = null;
         let extrasAtivos = [];
 
-        // --- INTERFACE ---
+        // --- INTERFACE E MENU ---
         window.filterCat = (cat, btn) => {
             currentCat = cat;
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
@@ -254,64 +259,67 @@
         window.renderMenu = (filter = "") => {
             const searchTerm = (typeof filter === 'string' ? filter : "").toLowerCase();
             const grid = document.getElementById('menuGrid');
+            if (!grid) return;
+
             const filtered = PRODUCTS.filter(p => {
                 const matchesCat = (currentCat === 'all' || p.cat === currentCat);
                 return matchesCat && p.nome.toLowerCase().includes(searchTerm);
             });
 
             grid.innerHTML = filtered.map(p => `
-                <div class="item ${p.preco >= 35 ? 'item-destaque' : ''}">
-                    <div class="product-image-container">
-                        <img src="${p.img || './img/placeholder.png'}" class="product-image">
-                    </div>
-                    <div class="item-info">
-                        <h3>${p.nome}</h3>
-                        <p>${p.desc}</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
-                            <span class="price">R$ ${p.preco.toFixed(2)}</span>
-                            <button onclick="window.addToCart('${p.nome}', ${p.preco}, '${p.cat}')" class="add-btn-style">
-                                <i class="fa fa-plus"></i> ADICIONAR
-                            </button>
-                        </div>
+            <div class="item ${p.preco >= 35 ? 'item-destaque' : ''}">
+                <div class="product-image-container">
+                    <img src="${p.img || './img/placeholder.png'}" class="product-image">
+                </div>
+                <div class="item-info">
+                    <h3>${p.nome}</h3>
+                    <p>${p.desc || ''}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                        <span class="price">R$ ${p.preco.toFixed(2)}</span>
+                        <button onclick="window.addToCart('${p.nome}', ${p.preco}, '${p.cat}')" class="add-btn-style">
+                            <i class="fa fa-plus"></i> ADICIONAR
+                        </button>
                     </div>
                 </div>
-            `).join('');
+            </div>
+        `).join('');
         };
 
+        // --- CARRINHO E PERSONALIZAÇÃO ---
         window.addToCart = (nome, preco, cat) => {
             const produto = PRODUCTS.find(p => p.nome === nome);
+
+            // Se não for burguer, adiciona direto
             if (cat !== 'Burguer') {
-                cart.push({ nome, preco, cat, obs: "" });
+                window.cart.push({ nome, preco, cat, obs: "" });
                 window.atualizarInterfaceCarrinho();
                 return;
             }
+
+            // Se for burguer, abre modal de personalização
             itemSendoPersonalizado = { nome, preco, cat };
             extrasAtivos = [];
             document.getElementById('itemPersonalizarNome').innerText = nome;
             document.getElementById('itemPersonalizarPreco').innerText = `R$ ${preco.toFixed(2)}`;
+            document.getElementById('listaExtras').innerText = "";
 
-
-            // Lógica simples de ingredientes para retirar
-            const ingredientes = produto.desc.split(',').map(i => i.trim());
+            const ingredientes = produto.desc ? produto.desc.split(',').map(i => i.trim()) : [];
             let html = `<p style="margin-bottom:10px; color:var(--accent)">Retirar?</p>`;
+
             ingredientes.forEach(ing => {
                 html += `<label style="display:block; margin-bottom:8px;">
-                    <input type="checkbox" class="obs-check" value="Sem ${ing}"> Sem ${ing}
-                </label>`;
+                <input type="checkbox" class="obs-check" value="Sem ${ing}"> Sem ${ing}
+            </label>`;
             });
 
-            html += `
-<hr class="divider">
-<p class="titulo-adicionais">Adicionais</p>
-`;
+            html += `<hr class="divider"><p class="titulo-adicionais">Adicionais</p>`;
 
             ADICIONAIS.forEach(ex => {
                 html += `
-    <button onclick="window.addExtra('${ex.nome}', ${ex.preco})" class="extra-btn-clean">
-        <span class="extra-left">+ ${ex.nome}</span>
-        <span class="extra-price">R$ ${ex.preco.toFixed(2)}</span>
-    </button>
-    `;
+                <button onclick="window.addExtra('${ex.nome}', ${ex.preco})" class="extra-btn-clean">
+                    <span class="extra-left">+ ${ex.nome}</span>
+                    <span class="extra-price">R$ ${ex.preco.toFixed(2)}</span>
+                </button>`;
             });
 
             document.getElementById('opcoesPersonalizar').innerHTML = html;
@@ -328,28 +336,97 @@
         window.confirmarPersonalizacao = () => {
             const obsRetirar = Array.from(document.querySelectorAll('.obs-check:checked')).map(c => c.value);
             const totalExtras = extrasAtivos.reduce((a, b) => a + b.preco, 0);
-            cart.push({
+
+            window.cart.push({
                 nome: itemSendoPersonalizado.nome,
                 preco: itemSendoPersonalizado.preco + totalExtras,
                 cat: itemSendoPersonalizado.cat,
                 obs: obsRetirar.concat(extrasAtivos.map(e => "Extra " + e.nome)).join(', ')
             });
+
             window.atualizarInterfaceCarrinho();
             window.fecharPersonalizar();
+
+            // Sugestão inteligente após adicionar hambúrguer
             setTimeout(() => {
                 sugerirUpsellInteligente();
             }, 500);
         };
 
         window.atualizarInterfaceCarrinho = () => {
-            const total = cart.reduce((a, b) => a + b.preco, 0);
-            document.getElementById('cartQty').innerText = cart.length;
+            const total = window.cart.reduce((a, b) => a + b.preco, 0);
+            document.getElementById('cartQty').innerText = window.cart.length;
             document.getElementById('cartTotal').innerText = `R$ ${total.toFixed(2)}`;
-            document.getElementById('cartBar').style.display = 'flex';
-            confetti({ particleCount: 30, spread: 50, origin: { y: 0.9 } });
+            document.getElementById('cartBar').style.display = window.cart.length > 0 ? 'flex' : 'none';
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 30, spread: 50, origin: { y: 0.9 } });
+            }
         };
 
-        // --- LÓGICA DE PAGAMENTO PIX ---
+        // --- CHECKOUT E PAGAMENTO ---
+        window.openCheckout = () => {
+            const review = document.getElementById('itemsReview');
+            review.innerHTML = window.cart.map((i, index) => `
+            <div style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border-left: 4px solid var(--accent);">
+                <div style="display:flex; justify-content:space-between; align-items: center;">
+                    <strong style="font-size: 1.1rem;">${i.nome}</strong>
+                    <i class="fa fa-trash" onclick="window.removeItem(${index})" style="color: #ff4d4d; cursor: pointer; padding: 5px;"></i>
+                </div>
+                <div style="font-size:0.85rem; color:#45A29E; margin-top:5px; font-style: italic;">
+                    ${i.obs ? i.obs : '<span style="color:#777">Item Completo</span>'}
+                </div>
+                <div style="text-align:right; margin-top:5px; font-weight:800;">
+                    R$ ${i.preco.toFixed(2)}
+                </div>
+            </div>`).join('');
+
+            document.getElementById('finalTotal').innerText = `R$ ${window.cart.reduce((a, b) => a + b.preco, 0).toFixed(2)}`;
+            document.getElementById('modalCheckout').style.display = 'flex';
+        };
+
+        window.removeItem = (index) => {
+            window.cart.splice(index, 1);
+            if (window.cart.length === 0) {
+                document.getElementById('modalCheckout').style.display = 'none';
+                document.getElementById('cartBar').style.display = 'none';
+            } else {
+                window.openCheckout();
+            }
+            window.atualizarInterfaceCarrinho();
+        };
+
+        window.sendOrder = async () => {
+            const nome = document.getElementById('cliNome').value;
+            const fone = document.getElementById('cliFone').value;
+            const pag = document.getElementById('cliPag').value;
+            const tipoEntrega = document.getElementById('tipoEntrega').value;
+            const endereco = document.getElementById('cliEnd')?.value || "";
+
+            if (!nome) { alert("Nome obrigatório"); return; }
+
+            dadosCliente = { nome, fone, pag, tipoEntrega, endereco };
+            const total = window.cart.reduce((a, b) => a + b.preco, 0);
+
+            if (pag === "Pix") {
+                const docRef = await addDoc(collection(db, "pedidos"), {
+                    status: "Aguardando pagamento",
+                    pago: false,
+                    timestamp: Date.now(),
+                    cliente_nome: nome,
+                    cliente_fone: fone,
+                    itens: window.cart,
+                    total: total,
+                    tipo_local: tipoEntrega,
+                    endereco_entrega: endereco
+                });
+                window.pedidoAtualId = docRef.id;
+                await pagarPix(total, docRef.id);
+            } else {
+                await window.concluirPedidoFinal();
+            }
+        };
+
         const pagarPix = async (valorTotal, pedidoId) => {
             const btn = document.getElementById('sendBtn');
             try {
@@ -361,43 +438,40 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         valor: valorTotal,
-                        descricao: `F&B Burguer - ${document.getElementById('cliNome').value}`,
-                        pedidoId: pedidoId // 🔥 ESSENCIAL
+                        descricao: `F&B Burguer - ${dadosCliente.nome}`,
+                        pedidoId: pedidoId
                     })
                 });
 
                 const data = await response.json();
                 if (data.erro) throw new Error(data.detalhe);
 
+                window.ultimoPagamentoId = data.pagamento_id;
+
                 const modalBody = document.querySelector('#modalCheckout .modal-body');
                 modalBody.innerHTML = `
-                    <div style="text-align:center; padding: 20px; color:white;">
-                        <h2 style="color:var(--accent); margin-bottom:15px;">Pague via PIX</h2>
-                        <div style="background:white; padding:10px; border-radius:10px; display:inline-block; margin-bottom:15px;">
-                            <img src="data:image/png;base64,${data.qr_base64}" style="width:200px; display:block;">
-                        </div>
-                        <button class="finish-btn" onclick="navigator.clipboard.writeText('${data.qr_code}').then(() => alert('Copiado!'))" style="margin-bottom: 20px;">
-                            COPIAR CÓDIGO PIX
-                        </button>
-                        <div id="statusPagamento"><i class="fa fa-spinner fa-spin"></i> Aguardando confirmação...</div>
-                    </div>`;
+                <div style="text-align:center; padding: 20px; color:white;">
+                    <h2 style="color:var(--accent);">Pague via PIX</h2>
+                    <div style="background:white; padding:10px; border-radius:10px; margin:15px 0; display:inline-block;">
+                        <img src="data:image/png;base64,${data.qr_base64}" style="width:200px;">
+                    </div>
+                    <button class="finish-btn" onclick="navigator.clipboard.writeText('${data.qr_code}')">
+                        COPIAR CÓDIGO PIX
+                    </button>
+                    <div id="statusPagamento" style="margin-top:20px;">
+                        ⏳ Aguardando pagamento...
+                    </div>
+                </div>`;
 
                 const checkStatus = setInterval(async () => {
-                    try {
-                        const res = await fetch(`https://f-burguer.onrender.com/status/${data.pagamento_id}`);
-                        const sData = await res.json();
-                        if (sData.status === 'approved' || sData.status === 'accredited') {
+                    const res = await fetch(`https://f-burguer.onrender.com/status/${data.pagamento_id}`);
+                    const sData = await res.json();
 
-                            clearInterval(checkStatus);
-
-                            document.getElementById('statusPagamento').innerHTML = "✅ PAGAMENTO CONFIRMADO";
-
-                            setTimeout(() => {
-                                window.concluirPedidoFinal();
-                            }, 1500);
-
-                        }
-                    } catch (e) { console.error("Erro status", e); }
+                    if (sData.status === 'approved' || sData.status === 'accredited') {
+                        clearInterval(checkStatus);
+                        document.getElementById('statusPagamento').innerHTML = "✅ PAGAMENTO CONFIRMADO";
+                        setTimeout(() => { window.finalizarPedidoExistente(); }, 1500);
+                    }
                 }, 5000);
 
             } catch (e) {
@@ -407,62 +481,29 @@
             }
         };
 
-        // --- FINALIZAÇÃO ---
         window.concluirPedidoFinal = async () => {
             try {
-                const total = cart.reduce((a, b) => a + b.preco, 0);
+                const total = window.cart.reduce((a, b) => a + b.preco, 0);
+                const lanches = {}, espetos = {}, refrigerantes = {};
 
-                const lanches = {};
-                const espetos = {};
-                const refrigerantes = {};
-                const acai = {};
-
-                cart.forEach(item => {
-                    if (item.cat === "Burguer") {
-                        lanches[item.nome] = (lanches[item.nome] || 0) + 1;
-                    } else if (item.cat === "Espetinho") {
-                        espetos[item.nome] = (espetos[item.nome] || 0) + 1;
-                    } else if (item.cat === "Bebidas") {
-                        refrigerantes[item.nome] = (refrigerantes[item.nome] || 0) + 1;
-                    }
+                window.cart.forEach(item => {
+                    if (item.cat === "Burguer") lanches[item.nome] = (lanches[item.nome] || 0) + 1;
+                    else if (item.cat === "Espetinho") espetos[item.nome] = (espetos[item.nome] || 0) + 1;
+                    else if (item.cat === "Bebidas") refrigerantes[item.nome] = (refrigerantes[item.nome] || 0) + 1;
                 });
 
-                let observacaoFinal = "";
-                cart.forEach(item => {
-                    if (item.obs) {
-                        observacaoFinal += `${item.nome}: ${item.obs}\n`;
-                    }
-                });
-
-                // PROTEÇÃO: Só tenta ler os campos se eles existirem na tela
-                let enderecoString = "Retirada no Balcão";
-
-                if (dadosCliente.tipoEntrega === "entrega") {
-                    // Pegamos o valor do seu campo único cliEnd
-                    const campoUnico = document.getElementById('cliEnd');
-
-                    if (campoUnico && campoUnico.value.trim() !== "") {
-                        enderecoString = campoUnico.value.trim();
-                    } else {
-                        enderecoString = "Endereço não informado";
-                    }
-                }
-
-                // PROTEÇÃO: Troco
+                let obsFinal = window.cart.filter(i => i.obs).map(i => `${i.nome}: ${i.obs}`).join('\n');
                 const campoTroco = document.getElementById('troco');
                 const valorTroco = campoTroco ? (parseFloat(campoTroco.value) || 0) : 0;
 
                 const dados = {
                     cliente_nome: dadosCliente.nome,
                     cliente_fone: dadosCliente.fone,
-                    lanches: lanches,
-                    espetos: espetos,
-                    refrigerantes: refrigerantes,
-                    acai: acai,
-                    total: total,
-                    observacao: observacaoFinal.trim(),
-                    endereco_entrega: enderecoString,
-                    tipo_local: dadosCliente.tipoEntrega || 'balcao',
+                    lanches, espetos, refrigerantes,
+                    total,
+                    observacao: obsFinal,
+                    endereco_entrega: dadosCliente.tipoEntrega === 'entrega' ? dadosCliente.endereco : "Retirada no Balcão",
+                    tipo_local: dadosCliente.tipoEntrega,
                     pagamento: {
                         metodo: dadosCliente.pag,
                         status_pagamento: (dadosCliente.pag === "Pix" ? "Pago" : "Pendente"),
@@ -472,106 +513,19 @@
                     timestamp: Date.now()
                 };
 
-                // Salvar no Firebase
                 const docRef = await addDoc(collection(db, "pedidos"), dados);
 
-                // Feedback e Redirecionamento
-                console.log("Pedido enviado com sucesso:", docRef.id);
-
-                // WhatsApp (opcional, mas recomendado)
-                const msgWhats = encodeURIComponent(
-                    `*🍔 PEDIDO REGISTRADO - F&B BURGUER*
----------------------------------------
-👤 *CLIENTE:* ${dados.cliente_nome}
----------------------------------------
-
-💰 *RESUMO DO PEDIDO:*
-*Total: R$ ${total.toFixed(2)}*
-💳 *PAGAMENTO:* ${dados.forma_pagamento || 'A definir'}
----------------------------------------
-_🤖 Este é um comprovante automático._
-_O preparo é iniciado imediatamente após o envio desta mensagem._`
-                );
-
-                // Abre o WhatsApp já no seu número de Uberlândia
+                const msgWhats = encodeURIComponent(`*🍔 PEDIDO REGISTRADO - F&B BURGUER*\n👤 *CLIENTE:* ${dados.cliente_nome}\n💰 *TOTAL: R$ ${total.toFixed(2)}*\n💳 *PAGAMENTO:* ${dados.pagamento.metodo}`);
                 window.open(`https://wa.me/5534997990974?text=${msgWhats}`, '_blank');
                 window.location.href = `status.html?id=${docRef.id}`;
 
             } catch (error) {
-                console.error("Erro detalhado ao finalizar pedido:", error);
-                alert("Erro ao enviar pedido. Verifique se todos os campos estão preenchidos.");
+                console.error(error);
+                alert("Erro ao enviar pedido.");
             }
         };
-        window.sendOrder = async () => {
 
-            const nome = document.getElementById('cliNome').value;
-            const fone = document.getElementById('cliFone').value;
-            const pag = document.getElementById('cliPag').value;
-            const tipoEntrega = document.getElementById('tipoEntrega').value;
-            const endereco = document.getElementById('cliEnd')?.value || "";
-
-            if (!nome) {
-                alert("Nome obrigatório");
-                return;
-            }
-
-            dadosCliente = {
-                nome,
-                fone,
-                pag,
-                tipoEntrega,
-                endereco
-            };
-
-            const total = cart.reduce((a, b) => a + b.preco, 0);
-
-            if (pag === "Pix") {
-
-                // 🔥 CRIA PEDIDO ANTES
-                const docRef = await addDoc(collection(db, "pedidos"), {
-                    status: "Aguardando pagamento",
-                    pago: false,
-                    timestamp: Date.now(),
-                    cliente_nome: nome,
-                    cliente_fone: fone,
-                    itens: cart
-                });
-
-                const pedidoId = docRef.id;
-
-                // 🔥 CHAMA PIX COM ID
-                await pagarPix(total, pedidoId);
-
-            } else {
-                await window.concluirPedidoFinal();
-            }
-        };
-        window.openCheckout = () => {
-            const review = document.getElementById('itemsReview');
-            review.innerHTML = cart.map((i, index) => `
-        <div style="margin-bottom:10px; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px; border-left: 4px solid var(--accent);">
-            <div style="display:flex; justify-content:space-between; align-items: center;">
-                <strong style="font-size: 1.1rem;">${i.nome}</strong>
-                <i class="fa fa-trash" onclick="window.removeItem(${index})" style="color: #ff4d4d; cursor: pointer; padding: 5px;"></i>
-            </div>
-            <div style="font-size:0.85rem; color:#45A29E; margin-top:5px; font-style: italic;">
-                ${i.obs ? i.obs : '<span style="color:#777">Item Completo</span>'}
-            </div>
-            <div style="text-align:right; margin-top:5px; font-weight:800;">
-                R$ ${i.preco.toFixed(2)}
-            </div>
-        </div>`).join('');
-
-            document.getElementById('finalTotal').innerText = `R$ ${cart.reduce((a, b) => a + b.preco, 0).toFixed(2)}`;
-            document.getElementById('modalCheckout').style.display = 'flex';
-        };
-        window.removeItem = (index) => {
-            cart.splice(index, 1);
-            if (cart.length === 0) document.getElementById('cartBar').style.display = 'none';
-            window.openCheckout();
-            window.atualizarInterfaceCarrinho();
-        };
-
+        // --- FUNÇÕES AUXILIARES E UPSELL ---
         window.closeModal = () => document.getElementById('modalCheckout').style.display = 'none';
         window.fecharPersonalizar = () => document.getElementById('modalPersonalizar').style.display = 'none';
         window.toggleEntrega = (v) => document.getElementById('campoEndereco').classList.toggle('hidden', v !== 'entrega');
@@ -580,181 +534,111 @@ _O preparo é iniciado imediatamente após o envio desta mensagem._`
             document.getElementById('campoCartao').classList.toggle('hidden', v !== 'Cartão');
         };
 
-        window.buscarMenu = (v) => {
-            clearTimeout(window.t);
-            window.t = setTimeout(() => window.renderMenu(v), 300);
+        const sugerirUpsellInteligente = () => {
+            const carrinho = window.cart || [];
+
+            const temLanche = carrinho.some(i => i.cat === "Burguer");
+
+            // Só dispara se tiver 1 burguer sozinho
+            if (carrinho.length !== 1 || !temLanche) return;
+
+            // Se já tiver bebida ou batata, não mostra
+            if (carrinho.some(i => i.cat === "Bebidas" || i.cat === "Batata")) return;
+
+            // Pega várias batatas
+            const batatas = PRODUCTS
+                .filter(p => p.cat === "Batata")
+                .slice(0, 3);
+
+            // Pega várias bebidas
+            const bebidas = PRODUCTS
+                .filter(p =>
+                    p.cat === "Bebidas" && p.nome.toLowerCase().includes("lata")
+                )
+                .slice(0, 3);
+
+            // Se não tiver nada pra sugerir
+            if (batatas.length === 0 && bebidas.length === 0) return;
+
+            const modal = document.createElement("div");
+            modal.className = "modal";
+            modal.style.display = "flex";
+
+            modal.innerHTML = `
+    <div class="modal-body" style="text-align:center;">
+        <h2>🔥 Complete seu pedido</h2>
+        <p style="font-size:0.9rem; color:#aaa;">Que tal adicionar?</p>
+
+        ${batatas.length > 0 ? batatas.map(b => `
+        <div class="upsell-item">
+            <span>${b.nome}</span>
+            <strong>R$ ${(b.preco || 0).toFixed(2)}</strong>
+            <button onclick="window.addToCart('${b.nome}', ${b.preco}, '${b.cat}'); this.closest('.modal').remove()">
+                + Batata
+            </button>
+        </div>
+        `).join("") : ""}
+
+        ${bebidas.length > 0 ? bebidas.map(b => `
+        <div class="upsell-item">
+            <span>${b.nome}</span>
+            <strong>R$ ${(b.preco || 0).toFixed(2)}</strong>
+            <button onclick="window.addToCart('${b.nome}', ${b.preco}, '${b.cat}'); this.closest('.modal').remove()">
+                + Bebida
+            </button>
+        </div>
+        `).join("") : ""}
+
+        <button onclick="this.closest('.modal').remove()" style="margin-top:10px; opacity:.6;">
+            Agora não
+        </button>
+    </div>`;
+
+            document.body.appendChild(modal);
+        };
+
+        // --- STATUS DA LOJA E INICIALIZAÇÃO ---
+        const HORARIO_FUNCIONAMENTO = { abre: "19:00", fecha: "23:30" };
+
+        const atualizarStatusUI = () => {
+            const status = document.getElementById("openStatus");
+            const infoAbertura = document.getElementById("proximaAbertura");
+            const agora = new Date();
+            const [ah, am] = HORARIO_FUNCIONAMENTO.abre.split(":").map(Number);
+            const [fh, fm] = HORARIO_FUNCIONAMENTO.fecha.split(":").map(Number);
+
+            const abre = new Date(); abre.setHours(ah, am, 0);
+            const fecha = new Date(); fecha.setHours(fh, fm, 0);
+            const aberto = agora >= abre && agora <= fecha;
+
+            if (status) {
+                status.innerText = aberto ? "ABERTO" : "FECHADO";
+                status.className = "status-badge " + (aberto ? "aberto" : "fechado");
+            }
+            if (infoAbertura) {
+                infoAbertura.innerText = aberto ? "" : `Abriremos às ${HORARIO_FUNCIONAMENTO.abre}`;
+                infoAbertura.style.display = aberto ? "none" : "block";
+            }
+        };
+
+        window.finalizarPedidoExistente = () => {
+            if (!window.pedidoAtualId) return;
+            window.location.href = `status.html?id=${window.pedidoAtualId}`;
         };
 
         window.addEventListener("load", () => {
             window.renderMenu();
             atualizarStatusUI();
-            setInterval(atualizarStatusUI, 60000); // atualiza a cada 1 min
+            setInterval(atualizarStatusUI, 60000);
         });
-        const HORARIO_FUNCIONAMENTO = {
-            abre: "19:00",
-            fecha: "23:30"
-        };
 
-        const verificarStatusLoja = () => {
-            const agora = new Date();
-
-            const [abreH, abreM] = HORARIO_FUNCIONAMENTO.abre.split(":").map(Number);
-            const [fechaH, fechaM] = HORARIO_FUNCIONAMENTO.fecha.split(":").map(Number);
-
-            const abre = new Date();
-            abre.setHours(abreH, abreM, 0);
-
-            const fecha = new Date();
-            fecha.setHours(fechaH, fechaM, 0);
-
-            return agora >= abre && agora <= fecha;
-        };
-
-        const atualizarStatusUI = () => {
-            const status = document.getElementById("openStatus");
-            const infoAbertura = document.getElementById("proximaAbertura"); // Pega o elemento da mensagem
-            const aberto = verificarStatusLoja();
-
-            if (aberto) {
-                status.innerText = "ABERTO";
-                status.classList.add("aberto");
-                status.classList.remove("fechado");
-
-                // Esconde a mensagem de horário se já estiver aberto
-                if (infoAbertura) {
-                    infoAbertura.style.display = "none";
-                }
-            } else {
-                status.innerText = "FECHADO";
-                status.classList.add("fechado");
-                status.classList.remove("aberto");
-
-                // Mostra a mensagem com o horário de abertura definido na sua const
-                if (infoAbertura) {
-                    infoAbertura.innerText = `Abriremos às ${HORARIO_FUNCIONAMENTO.abre}`;
-                    infoAbertura.style.display = "block";
-                }
+        document.addEventListener("visibilitychange", async () => {
+            if (document.visibilityState === "visible" && window.ultimoPagamentoId) {
+                try {
+                    const res = await fetch(`https://f-burguer.onrender.com/status/${window.ultimoPagamentoId}`);
+                    const data = await res.json();
+                    if (data.status === 'approved' || data.status === 'accredited') window.finalizarPedidoExistente();
+                } catch (e) { console.log(e); }
             }
-        };
-
-        // Não esqueça de chamar a função para ela rodar assim que a página carregar
-        atualizarStatusUI();
-        const sugerirUpsell = (categoria) => {
-
-            // só sugere se for hambúrguer
-            if (categoria !== "Burguer") return;
-
-            const sugestoes = PRODUCTS.filter(p =>
-                p.cat === "Batata" || p.cat === "Bebidas"
-            ).slice(0, 2); // pega 2 sugestões
-
-            const modal = document.createElement("div");
-            modal.className = "modal";
-            modal.innerHTML = `
-        <div class="modal-body" style="text-align:center;">
-            <h2 style="margin-bottom:10px;">🔥 Combina com seu pedido</h2>
-            <p style="font-size:0.9rem; color:#aaa; margin-bottom:15px;">
-                Adicione um extra ao seu pedido
-            </p>
-
-            ${sugestoes.map(p => `
-                <div class="upsell-item">
-                    <span>${p.nome}</span>
-                    <strong>R$ ${p.preco.toFixed(2)}</strong>
-                    <button onclick="window.addToCart('${p.nome}', ${p.preco}, '${p.cat}'); document.body.removeChild(this.closest('.modal'))">
-                        + Adicionar
-                    </button>
-                </div>
-            `).join("")}
-
-            <button onclick="document.body.removeChild(this.closest('.modal'))"
-                style="margin-top:15px; opacity:.7;">
-                Continuar sem adicionar
-            </button>
-        </div>
-    `;
-
-            document.body.appendChild(modal);
-        };
-        const sugerirUpsellInteligente = () => {
-
-            // pega itens do carrinho
-            const carrinho = window.cart || [];
-
-            const temLanche = carrinho.some(i => i.cat === "Burguer");
-            const temBebida = carrinho.some(i => i.cat === "Bebidas");
-            const temBatata = carrinho.some(i => i.cat === "Batata");
-
-            // só ativa se tiver apenas 1 lanche
-            if (carrinho.length !== 1 || !temLanche) return;
-
-            // se já tem bebida ou batata, não sugere
-            if (temBebida || temBatata) return;
-
-            // encontra sugestões ideais
-            const batata = PRODUCTS.find(p =>
-                p.cat === "Batata" && p.nome.toLowerCase().includes("p")
-            );
-
-            const bebida = PRODUCTS.find(p =>
-                p.cat === "Bebidas" && p.nome.toLowerCase().includes("lata")
-            );
-
-            if (!batata && !bebida) return;
-
-            const modal = document.createElement("div");
-            modal.className = "modal";
-
-            modal.innerHTML = `
-        <div class="modal-body" style="text-align:center;">
-            <h2>🔥 Complete seu pedido</h2>
-            <p style="font-size:0.9rem; color:#aaa;">
-                Que tal adicionar?
-            </p>
-
-            ${batata ? `
-            <div class="upsell-item">
-                <span>${batata.nome}</span>
-                <strong>R$ ${batata.preco.toFixed(2)}</strong>
-                <button onclick="window.addToCart('${batata.nome}', ${batata.preco}, '${batata.cat}'); fecharUpsell(this)">
-                    + Batata
-                </button>
-            </div>` : ""}
-
-            ${bebida ? `
-            <div class="upsell-item">
-                <span>${bebida.nome}</span>
-                <strong>R$ ${bebida.preco.toFixed(2)}</strong>
-                <button onclick="window.addToCart('${bebida.nome}', ${bebida.preco}, '${bebida.cat}'); fecharUpsell(this)">
-                    + Bebida
-                </button>
-            </div>` : ""}
-
-            <button onclick="fecharUpsell(this)" style="margin-top:10px; opacity:.6;">
-                Agora não
-            </button>
-        </div>
-    `;
-
-            document.body.appendChild(modal);
-        };
-
-        const fecharUpsell = (el) => {
-            document.body.removeChild(el.closest('.modal'));
-        };
+        });
     </script>
-    <div id="welcome-toast"
-        style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #ffeb3b; color: #000; padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px;">
-        <span>🚀 Você está testando nosso novo sistema!</span>
-        <button onclick="this.parentElement.style.display='none'"
-            style="border: none; background: transparent; font-weight: bold; cursor: pointer;">X</button>
-    </div>
-</body>
-<footer style="text-align: center; padding: 20px; opacity: 0.6;">
-    <p style="font-size: 0.9rem;">
-        F&B Burguer <br>
-        *Os produtos e acompanhamentos podem variar. Imagens meramente ilustrativas.
-    </p>
-</footer>
-
-</html>
