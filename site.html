@@ -410,7 +410,7 @@
 
             if (pag === "Pix") {
                 const docRef = await addDoc(collection(db, "pedidos"), {
-                    status: "Aguardando pagamento",
+                    status: "Pendente",
                     pago: false,
                     timestamp: Date.now(),
                     cliente_nome: nome,
