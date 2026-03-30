@@ -67,24 +67,35 @@ const PRECOS = {
         "Coca Cola 2L": 12.00, "Coca Cola Zero 2L": 12.00, "Fanta Laranja 2L": 12.00, "Kuat 2L": 10.00, "Mineiro 1.5L": 7.50, "Coca Cola 1L": 8.50, "Coca Cola Zero 1L": 8.50, "Mineiro Lata": 5.00, "Fanta Laranja Lata": 5.00, "Fanta Uva Lata": 5.00, "Coca Cola Lata": 5.00, "Coca Cola Zero Lata": 5.00, "Dell Vale Lata": 5.00, "Agua Mineral": 4.00, "Agua C/Gas": 4.00, "Dell Vale Pessego": 10, "Dell Vale Manga": 10, "Dell Vale Abacaxi": 10, "Dell Vale Laranja": 10, "Amstel": 6.00, "Skol": 5.00, "Brahma": 5.00, "Heineken": 9.00, "Monster Energy": 13.00
     },
     acai: {
-        "Açaí 400ml": 17.00,
-        "Açai 500ml": 20.00,
+        "Açaí 400ml": 18.90,
+        "Açai 500ml": 22.90,
+        "Barca Explosão": 32.90,
+        "Barca Senção": 31.90,
+        "Barca Tradicional": 29.90,
+        "Barca Chocolover": 34.90,
+        "Barca Premium": 36.90,
         "Shake Tradicional": 16.00,
         "Shake + Paçoca": 18.00
     },
     acaiAdicionais: {
-        "Banana Açai": 0.00,
-        "Morango": 0.00,
-        "Granola": 0.00,
-        "Leite em pó": 0.00,
-        "Leite Condensado": 0.00,
+        "Banana Gratis": 0.00,
+        "Morango Gratis": 0.00,
+        "Granola Gratis": 0.00,
+        "Leite em pó Gratis": 0.00,
+        "Leite Condensado Gratis": 0.00,
+        "Banana Extra": 2.00,
+        "Morango Extra": 3.00,
+        "Granola Extra": 2.00,
+        "Leite em pó Extra": 3.00,
+        "Leite Condensado Extra": 2.00,
         "Paçoca": 2.00,
-        "Ouro Branco": 3.00,
-        "Sonho de Valsa": 3.00,
-        "Nutella": 4.00,
-        "Kit Kat": 3.00,
-        "Disquetes": 2.00,
-        "Ovomaltine": 3.00
+        "Ouro Branco": 4.00,
+        "Sonho de Valsa": 4.00,
+        "Nutella": 5.00,
+        "Kit Kat": 4.00,
+        "Disquetes": 3.00,
+        "Bis": 3.00,
+        "Ovomaltine": 4.00
 
     }
 
