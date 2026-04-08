@@ -64,7 +64,7 @@ const PRECOS = {
         "F&B Mania": 45.00, "Pão + 1Blend": 13.00, "Pão + 2Blend": 17.00, "Molho Verde": 3.00, "Molho da Casa": 3.00, "Molho de alho": 3.00, "Mussarela": 3.00, "Cheedar": 3.00, "Bacon": 4.00, "Abacaxi": 2.00, "Ovo": 3.00, "Banana": 2.00, "Alface": 1.00, "Cebola Caramelizada": 2.00, "Picles": 3.00, "Anel de Cebola": 4.00,
     },
     refrigerantes: {
-        "Coca Cola 2L": 12.00, "Coca Cola Zero 2L": 12.00, "Fanta Laranja 2L": 12.00, "Kuat 2L": 10.00, "Mineiro 1.5L": 7.50, "Coca Cola 1L": 8.50, "Coca Cola Zero 1L": 8.50, "Mineiro Lata": 5.00, "Fanta Laranja Lata": 5.00, "Fanta Uva Lata": 5.00, "Coca Cola Lata": 5.00, "Coca Cola Zero Lata": 5.00, "Dell Vale Lata": 5.00, "Agua Mineral": 4.00, "Agua C/Gas": 4.00, "Dell Vale Pessego": 10, "Dell Vale Manga": 10, "Dell Vale Abacaxi": 10, "Dell Vale Laranja": 10, "Amstel": 6.00, "Skol": 5.00, "Brahma": 5.00, "Heineken": 9.00, "Monster Energy": 13.00
+        "Coca Cola 2L": 12.00, "Coca Cola Zero 2L": 12.00, "Fanta Laranja 2L": 12.00, "Kuat 2L": 10.00, "Mineiro 1.5L": 7.50, "Coca Cola 1L": 8.50, "Coca Cola Zero 1L": 8.50, "Mineiro Lata": 5.00, "Fanta Laranja Lata": 5.00, "Fanta Uva Lata": 5.00, "Coca Cola Lata": 5.00, "Coca Cola Zero Lata": 5.00, "Dell Vale Lata": 5.00, "Agua Mineral": 4.00, "Agua Com Gas": 4.00, "Dell Vale Pessego": 10, "Dell Vale Manga": 10, "Dell Vale Abacaxi": 10, "Dell Vale Laranja": 10, "Amstel": 6.00, "Skol": 5.00, "Brahma": 5.00, "Heineken": 9.00, "Monster Energy": 13.00
     },
     acai: {
         "Açaí 400ml": 18.90,
